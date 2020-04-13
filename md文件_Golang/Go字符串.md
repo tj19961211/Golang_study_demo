@@ -83,9 +83,9 @@ func testConvert() { // 测试 int 和 string(decimal) 互相转换的函数
 
 ## 常量和变量
 
-    常量顾名思义你没法改变它，在一些全局变量中使用const会更加安全。常量表达式是在编译期计算。
-    对于一些被整个模块或者其他模块经常使用的变量来说，最好定义成const防止被意外修改。
-    
+常量顾名思义你没法改变它，在一些全局变量中使用const会更加安全。常量表达式是在编译期计算。
+ 对于一些被整个模块或者其他模块经常使用的变量来说，最好定义成const防止被意外修改。
+
 ```go
    例：
     const (
@@ -97,4 +97,26 @@ func testConvert() { // 测试 int 和 string(decimal) 互相转换的函数
     Friday    = 5
     Saturday  = 6
 )
+```
+
+## 与字符串相关的包的例子
+
+### strconv包
+
+将字符串与其他类型进行相互的转化和string的应用
+
+```go
+//基本数值转换
+fmt.Println(strconv.Itoa(10)) // 整型转换成string  Output: 10
+fmt.Println(strconv.Atoi("711")) // string转换成整型 Outout: 711 <nil>
+
+//解析
+fmt.Println(strconv.ParseBool("false"))  // Output: false <nil>
+fmt.Pritnln(strconv.ParseFloat("3.14", 64)) // 传入参数第二个是转换成的bitSize
+
+//解析与格式化是互逆的操作
+
+//格式化
+fmt.Println(strconv.FormatBool(True))
+fmt.Println(strconv.FormatInt(20, 16))
 ```
