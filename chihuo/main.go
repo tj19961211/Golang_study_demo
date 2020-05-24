@@ -3,6 +3,7 @@ package main
 import (
 	"context"
 	"database/sql"
+	"fmt"
 	"math/rand"
 
 	"github.com/kataras/iris"
@@ -25,21 +26,10 @@ type ChihuoController struct {
 func (c *ChihuoController) Get() mvc.View {
 	// sucai = sucai[0:0]
 	// huncai = huncai[0:0]
-	sucai = []string{0: "胡萝卜", 1: "豆角", 2: "青菜", 3: "土豆", 4: "南瓜", 5: "花菜", 6: "西兰花"}
-	huncai = []string{0: "白切鸡", 1: "烧鸭", 2: "卤鸭", 3: "菠菜炒鸭", 4: "手撕鸡", 5: "辣子鸡", 6: "牛肉炒芹菜"}
-	list, err := c.UseManu.SelectAll()
-	//fmt.Println(list)
-	if err != nil {
-		log.Error(err)
-	}
-
-	for _, v := range list {
-		a := *v
-		//fmt.Println(v.HuncaiName)
-		sucai = append(sucai, a.SucaiName)
-		huncai = append(huncai, a.HuncaiName)
-	}
-
+	// sucai = []string{0: "胡萝卜", 1: "豆角", 2: "青菜", 3: "土豆", 4: "南瓜", 5: "花菜", 6: "西兰花"}
+	// huncai = []string{0: "白切鸡", 1: "烧鸭", 2: "卤鸭", 3: "菠菜炒鸭", 4: "手撕鸡", 5: "辣子鸡", 6: "牛肉炒芹菜"}
+	fmt.Println(sucai)
+	fmt.Println(huncai)
 	return mvc.View{
 		Data: iris.Map{
 			"sucai":  sucai,
@@ -50,16 +40,14 @@ func (c *ChihuoController) Get() mvc.View {
 }
 
 func (c *ChihuoController) Post() mvc.View {
+
+	sucai = []string{0: "胡萝卜", 1: "豆角", 2: "青菜", 3: "土豆", 4: "南瓜", 5: "花菜", 6: "西兰花"}
+	huncai = []string{0: "白切鸡", 1: "烧鸭", 2: "卤鸭", 3: "菠菜炒鸭", 4: "手撕鸡", 5: "辣子鸡", 6: "牛肉炒芹菜"}
+
 	var (
 		vegetarian = c.Ctx.FormValue("vegetarian")
 		meatDish   = c.Ctx.FormValue("meatDish")
 	)
-	if vegetarian != "" {
-		sucai = append(sucai, vegetarian)
-	}
-	if meatDish != "" {
-		huncai = append(huncai, meatDish)
-	}
 	manu := &Manu{
 		HuncaiName: meatDish,
 		SucaiName:  vegetarian,
@@ -69,6 +57,20 @@ func (c *ChihuoController) Post() mvc.View {
 	c.Ctx.Application().Logger().Debug(err)
 	if err != nil {
 		log.Error(err)
+	}
+
+	list, err := c.UseManu.SelectAll()
+	if err != nil {
+		log.Error(err)
+	}
+	for _, v := range list {
+		a := *v
+		if a.SucaiName != "" {
+			sucai = append(sucai, a.SucaiName)
+		}
+		if a.HuncaiName != "" {
+			huncai = append(huncai, a.HuncaiName)
+		}
 	}
 	return mvc.View{
 		Data: iris.Map{
