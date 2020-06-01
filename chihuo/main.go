@@ -2,7 +2,6 @@ package main
 
 import (
 	"context"
-	"database/sql"
 	"fmt"
 	"math/rand"
 
@@ -12,167 +11,107 @@ import (
 	"github.com/opentracing/opentracing-go/log"
 
 	"chihuo/comm"
+	"chihuo/datamodels"
 )
-
-var sucai []string
-var huncai []string
 
 type ChihuoController struct {
 	Ctx     iris.Context
 	Session *sessions.Session
-	UseManu IManu
+	UseManu datamodels.IManu
 }
 
 func (c *ChihuoController) Get() mvc.View {
-	// sucai = sucai[0:0]
-	// huncai = huncai[0:0]
 	// sucai = []string{0: "胡萝卜", 1: "豆角", 2: "青菜", 3: "土豆", 4: "南瓜", 5: "花菜", 6: "西兰花"}
 	// huncai = []string{0: "白切鸡", 1: "烧鸭", 2: "卤鸭", 3: "菠菜炒鸭", 4: "手撕鸡", 5: "辣子鸡", 6: "牛肉炒芹菜"}
-	fmt.Println(sucai)
-	fmt.Println(huncai)
+
+	array, err := c.UseManu.SelectAll()
+	if err != nil {
+		fmt.Println(err)
+	}
+	//创建两组slice，两个以类型作为区分的slice，最后将两slice里面各一个值返回到页面
+	var slice1, slice2 []string
+	for _, v := range array {
+		if v.Type == 1 {
+			slice1 = append(slice1, v.Name)
+		}
+		if v.Type == 2 {
+			slice2 = append(slice2, v.Name)
+		}
+	}
+
 	return mvc.View{
 		Data: iris.Map{
-			"sucai":  sucai,
-			"huncai": huncai,
+			"sucai":  slice1,
+			"huncai": slice2,
 		},
 		Name: "index.html",
 	}
 }
 
-func (c *ChihuoController) Post() mvc.View {
-
-	sucai = []string{0: "胡萝卜", 1: "豆角", 2: "青菜", 3: "土豆", 4: "南瓜", 5: "花菜", 6: "西兰花"}
-	huncai = []string{0: "白切鸡", 1: "烧鸭", 2: "卤鸭", 3: "菠菜炒鸭", 4: "手撕鸡", 5: "辣子鸡", 6: "牛肉炒芹菜"}
-
+func (c *ChihuoController) Post() mvc.Response {
 	var (
 		vegetarian = c.Ctx.FormValue("vegetarian")
 		meatDish   = c.Ctx.FormValue("meatDish")
 	)
-	manu := &Manu{
-		HuncaiName: meatDish,
-		SucaiName:  vegetarian,
-	}
-
-	err := c.UseManu.Insert(manu)
-	c.Ctx.Application().Logger().Debug(err)
-	if err != nil {
-		log.Error(err)
-	}
-
-	list, err := c.UseManu.SelectAll()
-	if err != nil {
-		log.Error(err)
-	}
-	for _, v := range list {
-		a := *v
-		if a.SucaiName != "" {
-			sucai = append(sucai, a.SucaiName)
-		}
-		if a.HuncaiName != "" {
-			huncai = append(huncai, a.HuncaiName)
-		}
-	}
-	return mvc.View{
-		Data: iris.Map{
-			"sucai":  sucai,
-			"huncai": huncai,
-		},
-		Name: "index.html",
-	}
-}
-
-type Manu struct {
-	HuncaiName string
-	SucaiName  string
-}
-
-type IManu interface {
-	Conn() error
-	Insert(m *Manu) error
-	SelectAll() (manuArray []*Manu, err error)
-}
-
-type UseManu struct {
-	table     string
-	mysqlConn *sql.DB
-}
-
-func NewUseMane(table string, db *sql.DB) IManu {
-	return &UseManu{table: table, mysqlConn: db}
-}
-
-func (u *UseManu) Conn() (err error) {
-	if u.mysqlConn == nil {
-		mysql, err := comm.NewMysqlConn()
+	if vegetarian != "" {
+		vt := insertVar(vegetarian, 1)
+		err := c.UseManu.Insert(vt)
 		if err != nil {
-			return err
+			fmt.Println(err)
 		}
-
-		u.mysqlConn = mysql
 	}
-	if u.table == "" {
-		u.table = "manu"
+	if meatDish != "" {
+		md := insertVar(meatDish, 2)
+		err := c.UseManu.Insert(md)
+		if err != nil {
+			fmt.Println(err)
+		}
 	}
-	return
+	return mvc.Response{
+		Path: "/",
+	}
 }
 
-func (u *UseManu) SelectAll() (manuArray []*Manu, err error) {
-	if err := u.Conn(); err != nil {
-		return nil, err
-	}
-
-	sql := "SELECT * FROM " + u.table
-	rows, err := u.mysqlConn.Query(sql)
-	//fmt.Println(rows)
-	defer rows.Close()
-	if err != nil {
-		return nil, err
-	}
-
-	result := comm.GetResultRows(rows)
-	if len(result) == 0 {
-		return nil, err
-	}
-
-	for _, v := range result {
-		manu := &Manu{}
-		//comm.DataToStructByTagSql(v, manu)
-		//fmt.Println(v)
-		manu.HuncaiName = v["huncaiName"]
-		manu.SucaiName = v["sucaiName"]
-		manuArray = append(manuArray, manu)
-	}
-	return
+func insertVar(name string, tp int) *datamodels.Manu {
+	s := &datamodels.Manu{}
+	s.Name = name
+	s.Type = tp
+	s.Count = 0
+	return s
 }
 
-func (u *UseManu) Insert(user *Manu) (err error) {
-	if err = u.Conn(); err != nil {
-		return
-	}
-	sql := "INSERT " + u.table + " SET huncaiName=?,sucaiName=?"
-	stmt, err := u.mysqlConn.Prepare(sql)
-	defer stmt.Close()
-	if err != nil {
-		return err
-	}
+// func (c *ChihuoController) PostUpload() mvc.View {
 
-	_, err = stmt.Exec(user.HuncaiName, user.SucaiName)
-	if err != nil {
-		return err
-	}
-	return
-}
+// }
 
 func (c *ChihuoController) GetCaidan() mvc.View {
-	number1 := rand.Intn(len(sucai))
-	number2 := rand.Intn(len(huncai))
-	targetOne := sucai[number1]
-	targetTwo := huncai[number2]
+	array, err := c.UseManu.SelectAll()
+	if err != nil {
+		fmt.Println(err)
+	}
+	//创建两组slice，两个以类型作为区分的slice，最后将两slice里面各一个值返回到页面
+	var slice1, slice2 []*datamodels.Manu
+	for _, v := range array {
+		if v.Type == 1 {
+			slice1 = append(slice1, v)
+		}
+		if v.Type == 2 {
+			slice2 = append(slice2, v)
+		}
+	}
+	number1 := rand.Intn(len(slice1))
+	number2 := rand.Intn(len(slice2))
+	targetOne := slice1[number1]
+	targetOne.Count += 1
+	targetTwo := slice2[number2]
+	targetTwo.Count += 1
+	c.UseManu.UpdateCount(targetOne)
+	c.UseManu.UpdateCount(targetTwo)
 
 	return mvc.View{
 		Data: iris.Map{
-			"sucai":  targetOne,
-			"huncai": targetTwo,
+			"sucai":  targetOne.Name,
+			"huncai": targetTwo.Name,
 		},
 		Name: "caidan.html",
 	}
@@ -191,7 +130,7 @@ func main() {
 	ctx, cancel := context.WithCancel(context.Background())
 	defer cancel()
 
-	chihuoService := NewUseMane("manu", db)
+	chihuoService := datamodels.NewUseMane("manu", db)
 	chihuoParty := app.Party("/")
 	chihuo := mvc.New(chihuoParty)
 	chihuo.Register(ctx, chihuoService)
