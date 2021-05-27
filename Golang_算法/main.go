@@ -25,9 +25,24 @@ func quickSort(nums []int, lo, hi int) {
 	quickSort(nums, p+1, hi)
 }
 
+func Palindrome(nums int) bool {
+	if nums < 0 || (nums%10 == 0 && nums != 0) {
+		return false
+	}
+
+	res, y := 0, nums
+	for nums > 0 {
+		res = res*10 + nums%10
+		nums /= 10
+	}
+	return y == res
+}
+
 func main() {
 	list := []int{55, 90, 74, 20, 16, 46, 43, 59, 2, 99, 79, 10, 73, 1, 68, 56, 3, 87, 40, 78, 14, 18, 51, 24, 57, 89, 4, 62, 53, 23, 93, 41, 95, 84, 88}
 
 	quickSort(list, 0, len(list)-1)
-	fmt.Println(list)
+	//fmt.Println(list)
+	fmt.Println(Palindrome(2112))
+	fmt.Println(Palindrome(466265489))
 }

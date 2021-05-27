@@ -1,0 +1,5 @@
+# Theme
+
+本文件主要用于学习linux的shell编程部署项目，与使用python部署项目。
+
+以此进行linux的学习与python替代shell部署的学习

@@ -29,10 +29,27 @@ func quickSort(nums []int, lo, hi int) {
     quickSort(nums, p+1, hi)
 }
 
+func topk(nums []int, k, lo, hi int) int{
+    if lo > hi {
+        return
+    }
+    p := partition(nums, lo, hi)
+    if p == k {
+        return nums[p]
+    }
+    if p < k {
+        quickSort(nums, p+1, hi)
+    }
+    if p > k {
+        quickSort(nums, lo, p-1)
+    }
+}
+
 func main() {
 	list := []int{55, 90, 74, 20, 16, 46, 43, 59, 2, 99, 79, 10, 73, 1, 68, 56, 3, 87, 40, 78, 14, 18, 51, 24, 57, 89, 4, 62, 53, 23, 93, 41, 95, 84, 88}
 
 	quickSort(list, 0, len(list)-1)
-	fmt.Println(list)
+    fmt.Println(list)
+    fmt.Println(topk(list, 4, 0, len(list)-1))
 }
 ```
