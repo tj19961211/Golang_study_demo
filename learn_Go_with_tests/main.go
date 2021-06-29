@@ -12,4 +12,5 @@ func Greet(write io.Writer, name string) {
 
 func main() {
 	Greet(os.Stdout, "Elodie")
+	var a map[string]string
 }
