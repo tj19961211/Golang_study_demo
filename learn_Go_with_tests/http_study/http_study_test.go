@@ -82,7 +82,7 @@ func newGetScoreRequest(name string) *http.Request {
 	return req
 }
 
-func newPostWinReuqest(name string) *http.Request {
+func newPostWinRequest(name string) *http.Request {
 	req, _ := http.NewRequest(http.MethodPost, fmt.Sprintf("/players/%s", name), nil)
 	return req
 }
