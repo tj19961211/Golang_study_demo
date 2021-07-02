@@ -58,7 +58,7 @@ func TestStoreWins(t *testing.T) {
 	t.Run("if returns accepted on POST", func(t *testing.T) {
 		player := "Pepper"
 
-		request := newPostWinReuqest(player)
+		request := newPostWinRequest(player)
 		response := httptest.NewRecorder()
 
 		server.ServeHTTP(response, request)

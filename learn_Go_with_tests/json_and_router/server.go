@@ -64,24 +64,11 @@ func (p *PlayerServer) processWin(w http.ResponseWriter, player string) {
 	w.WriteHeader(http.StatusAccepted)
 }
 
-func (s *StubPlayerStore) GetPlayerScore(name string) int {
-	score := s.scores[name]
-	return score
-}
-
-func (s *StubPlayerStore) RecordWin(name string) {
-	s.wincalls = append(s.wincalls, name)
-}
-
 func (p *PlayerServer) leagueHandler(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("content-type", "application/json")
 	json.NewEncoder(w).Encode(p.store.GetLeague())
 
 	w.WriteHeader(http.StatusOK)
-}
-
-func (s *StubPlayerStore) GetLeague() []Player {
-	return s.league
 }
 
 // func (p *PlayerServer) getLeagueTable() []Player {
@@ -103,12 +90,6 @@ func (p *PlayerServer) playersHandler(w http.ResponseWriter, r *http.Request) {
 
 }
 
-type PlayerStore interface {
-	GetPlayerScore(name string) int
-	RecordWin(name string)
-	GetLeague() []Player
-}
-
 /*
 我们更改了 PlayerServer 的第二个属性，删除了命名属性 router http.ServeMux，并用 http.Handler 替换了它；这被称为 嵌入。
 高效 Go - 嵌入(https://golang.org/doc/effective_go.html#embedding)
@@ -127,12 +108,6 @@ type PlayerStore interface {
 type PlayerServer struct {
 	store PlayerStore
 	http.Handler
-}
-
-type StubPlayerStore struct {
-	scores   map[string]int
-	wincalls []string
-	league   []Player
 }
 
 type Player struct {

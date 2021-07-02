@@ -72,8 +72,10 @@ func TestLrague(t *testing.T) {
 }
 
 func TestRecordingWinsRetrievingThem(t *testing.T) {
-	store := NewInMemoryPlayerStore()
-	server := NewPlayerServer(store)
+	database, cleanDatabase := createTempFile(t, "")
+	defer cleanDatabase()
+	store := &FileSystemPlayerStore{database}
+	server := NewFileSystemPlayerStore(store)
 	player := "Pepper"
 
 	server.ServeHTTP(httptest.NewRecorder(), newPostWinRequest(player))
@@ -103,31 +105,6 @@ func TestRecordingWinsRetrievingThem(t *testing.T) {
 }
 
 /* 辅助函数 */
-
-type PlayerStore interface {
-	GetPlayerScore(name string) int
-	RecordWin(name string)
-	GetLeague() []Player
-}
-
-type StubPlayerStore struct {
-	scores   map[string]int
-	wincalls []string
-	league   []Player
-}
-
-func (s *StubPlayerStore) GetLeague() []Player {
-	return s.league
-}
-
-func (s *StubPlayerStore) GetPlayerScore(name string) int {
-	score := s.scores[name]
-	return score
-}
-
-func (s *StubPlayerStore) RecordWin(name string) {
-	s.wincalls = append(s.wincalls, name)
-}
 
 func newGetScoreRequest(name string) *http.Request {
 	req, _ := http.NewRequest(http.MethodGet, fmt.Sprintf("/players/%s", name), nil)
@@ -182,6 +159,8 @@ func getLeagueFromResponse(t *testing.T, body io.Reader) (league []Player) {
 	if err != nil {
 		t.Fatalf("Unable to parse response from server '%s' into slice of Player, '%v'", body, err)
 	}
+
+	league, _ = NewLeague(body)
 
 	return
 }
